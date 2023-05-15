@@ -1,4 +1,4 @@
-package com.example.alchemistcompanion.ui
+package com.example.alchemistcompanion.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

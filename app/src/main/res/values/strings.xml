@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">AlchemistCompanion</string>
+    <string name="player_name_prompt">Enter player name</string>
+    <string name="player_1">Player 1</string>
+    <string name="player_2">Player 2</string>
+    <string name="setup_match">Setup Match</string>
 </resources>
