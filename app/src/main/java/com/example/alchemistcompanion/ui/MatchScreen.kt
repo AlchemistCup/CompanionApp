@@ -4,10 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -16,7 +16,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.alchemistcompanion.ui.theme.AlchemistCompanionTheme
@@ -82,7 +81,7 @@ fun MatchTimer(
         Button(
             onClick = onPauseClick,
             colors = ButtonDefaults.buttonColors(
-                backgroundColor = if (isPaused && hasStarted) Color.Gray else MaterialTheme.colors.primary
+                if (isPaused && hasStarted) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
             )
         ) {
             Text(text = if (!hasStarted) "Start" else if (isPaused) "Resume" else "Pause")
