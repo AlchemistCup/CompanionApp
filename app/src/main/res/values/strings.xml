@@ -4,4 +4,6 @@
     <string name="player_1">Player 1</string>
     <string name="player_2">Player 2</string>
     <string name="setup_match">Setup Match</string>
+    <string name="loading">loading</string>
+    <string name="alchemist_logo">Alchemist logo</string>
 </resources>

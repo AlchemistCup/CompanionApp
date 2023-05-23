@@ -6,6 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.alchemistcompanion.ui.StartViewModel
 import com.example.alchemistcompanion.ui.screens.StartScreen
 import com.example.alchemistcompanion.ui.theme.AlchemistCompanionTheme
 
@@ -18,7 +20,8 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    StartScreen()
+                    val viewModel: StartViewModel = viewModel(factory = StartViewModel.Factory)
+                    StartScreen(viewModel)
                 }
             }
         }
