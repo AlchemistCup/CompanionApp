@@ -1,4 +1,4 @@
-package com.example.alchemistcompanion.ui.screens
+package com.example.alchemistcompanion.ui.setup
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -34,19 +33,15 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role.Companion.Image
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.alchemistcompanion.R
-import com.example.alchemistcompanion.ui.MatchStartState
-import com.example.alchemistcompanion.ui.MatchUiState
-import com.example.alchemistcompanion.ui.StartViewModel
 import com.example.alchemistcompanion.ui.theme.AlchemistCompanionTheme
 
 @Composable
-fun StartScreen(
-    viewModel: StartViewModel
+fun SetupScreen(
+    viewModel: SetupViewModel,
 ) {
     Column(
         modifier = Modifier
@@ -157,7 +152,8 @@ fun LoadingScreen(modifier: Modifier = Modifier) {
     )
 
     Box(
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
+        modifier = modifier
     ) {
         Image(
             modifier = Modifier
@@ -177,7 +173,8 @@ fun ErrorScreen(
     modifier: Modifier = Modifier) {
     Text(
         text = "Couldn't start match due to:\n$reason",
-        color = MaterialTheme.colorScheme.error
+        color = MaterialTheme.colorScheme.error,
+        modifier = modifier
     )
 }
 
@@ -187,15 +184,16 @@ fun SuccessScreen(
     modifier: Modifier = Modifier
 ) {
     Text(
-        text = "Success: matchId = $matchId"
+        text = "Success: matchId = $matchId",
+        modifier = modifier
     )
 }
 
 @Preview(showBackground = true, showSystemUi = true, device = "spec:width=1280dp,height=800dp")
 @Composable
-fun StartScreenPreview() {
+fun SetupScreenPreview() {
     AlchemistCompanionTheme() {
-        val viewModel: StartViewModel = viewModel(factory = StartViewModel.Factory)
-        StartScreen(viewModel)
+        val viewModel: SetupViewModel = viewModel(factory = SetupViewModel.Factory)
+        SetupScreen(viewModel)
     }
 }

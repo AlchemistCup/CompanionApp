@@ -1,4 +1,4 @@
-package com.example.alchemistcompanion.ui
+package com.example.alchemistcompanion.ui.setup
 
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -23,10 +23,10 @@ sealed interface MatchStartState {
     object Loading : MatchStartState
 }
 
-class StartViewModel(
+class SetupViewModel(
     private val matchDataRepository: MatchDataRepository
 ) : ViewModel() {
-    private val TAG = "StartViewModel"
+    private val TAG = "SetupViewModel"
     // Potentially move these out of the view model?
     var player1Name by mutableStateOf("")
     var player2Name by mutableStateOf("")
@@ -47,7 +47,10 @@ class StartViewModel(
                     MatchStartState.Success(result.matchId)
                 }
                 else {
-                    MatchStartState.Error(result.error ?: "Unknown error: match_id was null but no error reason was provided")
+                    MatchStartState.Error(
+                        result.error
+                            ?: "Unknown error: match_id was null but no error reason was provided"
+                    )
                 }
 
             } catch (e: IOException) {
@@ -71,7 +74,7 @@ class StartViewModel(
             initializer {
                 val application = (this[APPLICATION_KEY] as AlchemistCompanionApplication)
                 val matchDataRepository = application.container.matchDataRepository
-                StartViewModel(matchDataRepository)
+                SetupViewModel(matchDataRepository)
             }
         }
     }
