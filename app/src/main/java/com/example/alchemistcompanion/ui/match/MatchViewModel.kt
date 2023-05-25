@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import java.lang.IllegalArgumentException
 
 class MatchViewModel(
     private val matchDataRepository: MatchDataRepository,
@@ -44,7 +43,7 @@ class MatchViewModel(
             val timerState = uiState.value.getPlayerState(playerId).isTimerPaused
             return uiState.value.getPlayerState(playerId).copy(isTimerPaused = !timerState)
         }
-        Log.d(TAG, "Pausing timer for $playerId")
+        Log.d(TAG, "$playerId ended their turn")
         _uiState.update { currentState ->
             currentState.copy(
                 player1 = invertTimer(PlayerId.Player1),

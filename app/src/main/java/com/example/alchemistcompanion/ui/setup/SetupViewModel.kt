@@ -14,6 +14,7 @@ import com.example.alchemistcompanion.AlchemistCompanionApplication
 import com.example.alchemistcompanion.data.MatchDataRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import java.io.IOException
 
@@ -37,11 +38,11 @@ class SetupViewModel(
         reset()
     }
 
-    fun startMatch() {
+    fun startMatch(onMatchSetup: (String, String, String) -> Unit) {
         matchStartState = MatchStartState.Loading
         viewModelScope.launch(Dispatchers.IO) {
             matchStartState = try {
-                val result = matchDataRepository.startMatch(player1Name, player2Name)
+                val result = matchDataRepository.setupMatch(player1Name, player2Name)
                 Log.d(TAG, "$result")
                 if (result.matchId != null) {
                     MatchStartState.Success(result.matchId)
@@ -60,6 +61,18 @@ class SetupViewModel(
             } catch (e: HttpException) {
                 Log.d(TAG, "$e, ${e.code()}, ${e.response()}")
                 MatchStartState.Error("$e")
+            }
+
+            // UI changes must be performed in Main thread
+            withContext(Dispatchers.Main) {
+                if (matchStartState is MatchStartState.Success) {
+                    val matchId = (matchStartState as MatchStartState.Success).matchId
+                    Log.d(
+                        TAG,
+                        "Calling OnMatchSetup with matchId=$matchId, player1Name=$player1Name, player2Name=$player2Name"
+                    )
+                    onMatchSetup(matchId, player1Name, player2Name)
+                }
             }
         }
     }

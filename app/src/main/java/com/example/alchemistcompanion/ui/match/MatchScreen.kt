@@ -86,7 +86,7 @@ fun MatchTimer(
     LaunchedEffect(isEnabled) {
         while (true) {
             delay(100)
-            if (!isEnabled) {
+            if (isEnabled) {
                 onTimerUpdate(playerId, 100)
             }
         }

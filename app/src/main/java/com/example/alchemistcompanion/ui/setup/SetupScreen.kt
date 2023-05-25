@@ -1,5 +1,6 @@
 package com.example.alchemistcompanion.ui.setup
 
+import android.util.Log
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -42,6 +43,7 @@ import com.example.alchemistcompanion.ui.theme.AlchemistCompanionTheme
 @Composable
 fun SetupScreen(
     viewModel: SetupViewModel,
+    onMatchSetup: (String, String, String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -79,7 +81,7 @@ fun SetupScreen(
         }
 
         Button(
-            onClick = { viewModel.startMatch() },
+            onClick = { viewModel.startMatch(onMatchSetup) },
             modifier = Modifier.padding(dimensionResource(id = R.dimen.padding_medium))
         ) {
             Text(
@@ -194,6 +196,13 @@ fun SuccessScreen(
 fun SetupScreenPreview() {
     AlchemistCompanionTheme() {
         val viewModel: SetupViewModel = viewModel(factory = SetupViewModel.Factory)
-        SetupScreen(viewModel)
+        SetupScreen(
+            viewModel
+        ) { matchId, player1Name, player2Name ->
+            Log.d(
+                "SetupPreview",
+                "Navigating to Match Screen with matchId=$matchId, player1Name=$player1Name, player2Name=$player2Name"
+            )
+        }
     }
 }
