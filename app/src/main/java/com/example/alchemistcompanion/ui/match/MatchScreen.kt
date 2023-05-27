@@ -1,9 +1,10 @@
 package com.example.alchemistcompanion.ui.match
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,15 +13,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme.colorScheme
-import androidx.compose.material3.MaterialTheme.shapes
 import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,7 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -100,7 +96,6 @@ fun MatchTimer(
             }
         }
     }
-
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -217,64 +212,6 @@ fun UtilityButtons(
 }
 
 @Composable
-fun SendBlanksDialogue(
-    uiState: BlanksDialogueUiState,
-    onUserInputChange: (String) -> Unit,
-    onSubmission: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .background(color = colorScheme.surface)
-    ) {
-        Column(
-            verticalArrangement = Arrangement.SpaceEvenly,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(dimensionResource(R.dimen.padding_small))
-        ) {
-            Text(
-                text = "${uiState.nOfBlanks} blank tile(s) detected. Please enter their value(s) in reading order.",
-                style = typography.titleLarge
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            OutlinedTextField(
-                value = uiState.userInput,
-                singleLine = true,
-                shape = shapes.large,
-                onValueChange = onUserInputChange,
-                textStyle = typography.titleMedium,
-                modifier = Modifier.fillMaxWidth(),
-                label = {
-                    if (uiState.isInputInvalid) {
-                        Text("Expected ${uiState.nOfBlanks} letter(s)")
-                    } else {
-                        Text("Enter blank value(s)")
-                    }
-                },
-                isError = uiState.isInputInvalid,
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = { onSubmission() }
-                )
-            )
-            Button(
-                modifier = Modifier.padding(dimensionResource(R.dimen.padding_small)),
-                onClick = onSubmission
-            ) {
-                Text(
-                    text = stringResource(R.string.submit),
-                    style = typography.titleMedium
-                )
-            }
-        }
-    }
-}
-
-@Composable
 fun MatchScreen(
     viewModel: MatchViewModel,
     modifier: Modifier = Modifier
@@ -329,9 +266,13 @@ fun MatchScreen(
     }
 
     val blanksUiState by viewModel.blanksUiState.collectAsState()
-    if (blanksUiState.nOfBlanks > 0) {
+    AnimatedVisibility(
+        visible = blanksUiState.nOfBlanks > 0,
+        enter = scaleIn(),
+        exit = scaleOut()
+    ) {
         Dialog(onDismissRequest = { /*Do nothing*/ }) {
-            SendBlanksDialogue(
+            BlanksDialogue(
                 uiState = blanksUiState,
                 onUserInputChange = viewModel::onBlanksUserUpdate,
                 onSubmission = viewModel::onBlanksSubmission,
@@ -357,31 +298,5 @@ fun MatchScreenPreview() {
             )
         )
         MatchScreen(viewModel)
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true, device = "spec:width=1280dp,height=800dp")
-@Composable
-fun BlanksDialoguePreview() {
-    AlchemistCompanionTheme {
-        val appContainer = DefaultAppContainer()
-        val viewModel: MatchViewModel = viewModel(
-            factory = MatchViewModelFactory(
-                appContainer.matchDataRepository,
-                "Test matchID",
-                "Player1",
-                "Player2"
-            )
-        )
-        viewModel.createNewBlanksDialogue(1)
-
-        val blanksUiState by viewModel.blanksUiState.collectAsState()
-
-        SendBlanksDialogue(
-            uiState = blanksUiState,
-            onUserInputChange = viewModel::onBlanksUserUpdate,
-            onSubmission = viewModel::onBlanksSubmission,
-            modifier = Modifier.fillMaxSize(.7f)
-        )
     }
 }
