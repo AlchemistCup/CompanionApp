@@ -43,23 +43,20 @@ class SetupViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             matchStartState = try {
                 val result = matchDataRepository.setupMatch(player1Name, player2Name)
-                Log.d(TAG, "$result")
-                if (result.matchId != null) {
-                    MatchStartState.Success(result.matchId)
+                if (result.success) {
+                    MatchStartState.Success(result.body!!.matchId)
                 }
                 else {
                     MatchStartState.Error(
-                        result.error
-                            ?: "Unknown error: match_id was null but no error reason was provided"
+                        result.error!!
                     )
                 }
-
             } catch (e: IOException) {
                 Log.d(TAG, "$e")
                 // This can also be a java.net.ProtocolException: unexpected end of stream, but apparently this is a bug in the android studio emulator (https://stackoverflow.com/a/61685212)
                 MatchStartState.Error("Unable to connect to server")
             } catch (e: HttpException) {
-                Log.d(TAG, "$e, ${e.code()}, ${e.response()}")
+                Log.d(TAG, "$e")
                 MatchStartState.Error("$e")
             }
 

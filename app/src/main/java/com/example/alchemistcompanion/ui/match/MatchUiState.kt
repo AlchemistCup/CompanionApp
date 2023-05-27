@@ -16,6 +16,8 @@ data class MatchUiState (
     val player2: Player,
     val matchState: MatchState = MatchState.Unbegun,
     val isDisconnected: Boolean = false,
+    val turnNumber: Int = 0,
+    val blankTiles: Int = 0
 ) {
     fun getPlayerState(playerId: PlayerId): Player {
         return when (playerId) {

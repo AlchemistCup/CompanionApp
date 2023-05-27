@@ -3,11 +3,16 @@ package com.example.alchemistcompanion.ui.match
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.example.alchemistcompanion.data.MatchDataRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import retrofit2.HttpException
+import java.io.IOException
 
 class MatchViewModel(
     private val matchDataRepository: MatchDataRepository,
@@ -43,12 +48,52 @@ class MatchViewModel(
             val timerState = uiState.value.getPlayerState(playerId).isTimerPaused
             return uiState.value.getPlayerState(playerId).copy(isTimerPaused = !timerState)
         }
+
         Log.d(TAG, "$playerId ended their turn")
+        val currentTurn = uiState.value.turnNumber
         _uiState.update { currentState ->
             currentState.copy(
                 player1 = invertTimer(PlayerId.Player1),
-                player2 = invertTimer(PlayerId.Player2)
+                player2 = invertTimer(PlayerId.Player2),
+                turnNumber = currentTurn + 1
             )
+        }
+
+        if (!uiState.value.isDisconnected) {
+            viewModelScope.launch(Dispatchers.IO) {
+                try {
+                    val result = matchDataRepository.endTurn(
+                        matchId = matchId,
+                        turnNumber = currentTurn,
+                        playerTime = uiState.value.getPlayerState(playerId).remainingTime
+                    )
+                    if (result.success) {
+                        val body = result.body!!
+                        Log.d(TAG, "Received end turn response $body")
+                        val currentPlayer = uiState.value.getPlayerState(playerId)
+                        val updatedPlayer =
+                            currentPlayer.copy(score = currentPlayer.score + result.body.score)
+                        updatePlayerState(playerId, updatedPlayer)
+                        if (body.blanks > 0) {
+                            _uiState.update { currentState ->
+                                currentState.copy(
+                                    blankTiles = body.blanks
+                                )
+                            }
+                        }
+                    } else {
+                        Log.d(TAG, "Received end turn error ${result.error}")
+                        onDisconnect(result.error!!)
+                    }
+
+                } catch (e: IOException) {
+                    Log.d(TAG, "$e")
+                    onDisconnect("Unable to connect to server")
+                } catch (e: HttpException) {
+                    Log.d(TAG, "$e")
+                    onDisconnect("$e")
+                }
+            }
         }
     }
 
@@ -78,6 +123,10 @@ class MatchViewModel(
                 PlayerId.Player2 -> currentState.copy(player2 = updatedPlayer)
             }
         }
+    }
+
+    private fun onDisconnect(reason: String) {
+        Log.d(TAG, "Switching to offline mode ($reason)")
     }
 }
 
