@@ -8,4 +8,5 @@
     <string name="alchemist_logo">Alchemist logo</string>
     <string name="setup_screen">SetupScreen</string>
     <string name="match_screen">MatchScreen</string>
+    <string name="submit">Submit</string>
 </resources>

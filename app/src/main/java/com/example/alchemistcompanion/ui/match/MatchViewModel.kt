@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.alchemistcompanion.data.MatchDataRepository
+import com.example.alchemistcompanion.network.ServerResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,8 +35,12 @@ class MatchViewModel(
             )
         )
     )
-
     val uiState: StateFlow<MatchUiState> = _uiState.asStateFlow()
+
+    private val _blanksUiState = MutableStateFlow(
+        BlanksDialogueUiState(0)
+    )
+    val blanksUiState: StateFlow<BlanksDialogueUiState> = _blanksUiState.asStateFlow()
 
     fun decrementRemainingTime(player: PlayerId, timeInMs: Int) {
         val currentTime = uiState.value.getPlayerState(player).remainingTime
@@ -61,38 +66,23 @@ class MatchViewModel(
 
         if (!uiState.value.isDisconnected) {
             viewModelScope.launch(Dispatchers.IO) {
-                try {
-                    val result = matchDataRepository.endTurn(
+                makeServerRequest(
+                    request = { matchDataRepository.endTurn(
                         matchId = matchId,
                         turnNumber = currentTurn,
                         playerTime = uiState.value.getPlayerState(playerId).remainingTime
-                    )
-                    if (result.success) {
-                        val body = result.body!!
-                        Log.d(TAG, "Received end turn response $body")
+                    ) },
+                    onSuccess = { result ->
+                        Log.d(TAG, "Received end turn response $result")
                         val currentPlayer = uiState.value.getPlayerState(playerId)
                         val updatedPlayer =
-                            currentPlayer.copy(score = currentPlayer.score + result.body.score)
+                            currentPlayer.copy(score = currentPlayer.score + result.score)
                         updatePlayerState(playerId, updatedPlayer)
-                        if (body.blanks > 0) {
-                            _uiState.update { currentState ->
-                                currentState.copy(
-                                    blankTiles = body.blanks
-                                )
-                            }
+                        if (result.blanks > 0) {
+                            createNewBlanksDialogue(result.blanks)
                         }
-                    } else {
-                        Log.d(TAG, "Received end turn error ${result.error}")
-                        onDisconnect(result.error!!)
                     }
-
-                } catch (e: IOException) {
-                    Log.d(TAG, "$e")
-                    onDisconnect("Unable to connect to server")
-                } catch (e: HttpException) {
-                    Log.d(TAG, "$e")
-                    onDisconnect("$e")
-                }
+                )
             }
         }
     }
@@ -105,6 +95,44 @@ class MatchViewModel(
                 MatchState.Paused -> MatchState.InProgress
                 MatchState.Finished -> throw AssertionError("Cannot toggle match state when match is finished")
             })
+        }
+    }
+
+    fun createNewBlanksDialogue(nOfBlanks: Int) {
+        _blanksUiState.update {
+            BlanksDialogueUiState(nOfBlanks)
+        }
+    }
+
+    fun onBlanksUserUpdate(userInput: String) {
+        _blanksUiState.update { currentState ->
+            currentState.copy(userInput = userInput)
+        }
+    }
+
+    fun onBlanksSubmission() {
+        fun String.isAlpha() = all { it.isLetter() }
+        val isInputValid =
+            blanksUiState.value.userInput.length == blanksUiState.value.nOfBlanks
+            && blanksUiState.value.userInput.isAlpha()
+
+        _blanksUiState.update { currentState ->
+            currentState.copy(isInputInvalid = !isInputValid)
+        }
+
+        if (isInputValid) {
+            viewModelScope.launch(Dispatchers.IO) {
+                makeServerRequest(
+                    request = { matchDataRepository.sendBlanks(
+                        matchId = matchId,
+                        turnNumber = uiState.value.turnNumber - 1, // Always submitting blanks for previous turn
+                        blankValues = blanksUiState.value.userInput
+                    )},
+                    onSuccess = {}
+                )
+                // Reset blanks dialogue regardless of success / failure on server side to allow match to progress on server error
+                createNewBlanksDialogue(0)
+            }
         }
     }
 
@@ -122,6 +150,27 @@ class MatchViewModel(
                 PlayerId.Player1 -> currentState.copy(player1 = updatedPlayer)
                 PlayerId.Player2 -> currentState.copy(player2 = updatedPlayer)
             }
+        }
+    }
+
+    private suspend fun <T> makeServerRequest(
+        request: suspend () -> ServerResponse<T>,
+        onSuccess: (T) -> Unit
+    ) {
+        try {
+            val result = request()
+            if (result.success) {
+                onSuccess(result.body!!)
+            } else {
+                Log.d(TAG, "Received end turn error ${result.error}")
+                onDisconnect(result.error!!)
+            }
+        } catch (e: IOException) {
+            Log.d(TAG, "$e")
+            onDisconnect("Unable to connect to server")
+        } catch (e: HttpException) {
+            Log.d(TAG, "$e")
+            onDisconnect("$e")
         }
     }
 
