@@ -264,7 +264,7 @@ fun MatchScreen(
         }
     }
 
-    val blanksUiState by viewModel.blanksDialogueViewModel.blanksUiState.collectAsState()
+    val blanksUiState by viewModel.blanksDialogueViewModel.uiState.collectAsState()
 
     AnimatedVisibility(
         visible = blanksUiState.nOfBlanks > 0,

@@ -35,7 +35,7 @@ fun BlanksDialogue(
     onSubmission: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.blanksUiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
 
     Box(
         modifier = modifier

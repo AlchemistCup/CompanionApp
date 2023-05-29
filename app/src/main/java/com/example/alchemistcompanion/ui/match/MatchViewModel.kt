@@ -96,7 +96,7 @@ class MatchViewModel(
     }
 
     fun onBlanksSubmission() {
-        for (i in 0 until blanksDialogueViewModel.blanksUiState.value.nOfBlanks) {
+        for (i in 0 until blanksDialogueViewModel.uiState.value.nOfBlanks) {
             blanksDialogueViewModel.validateBlankInput(i)
         }
 
@@ -111,7 +111,7 @@ class MatchViewModel(
                     onSuccess = {}
                 )
                 // Reset blanks dialogue regardless of success / failure on server side to allow match to progress on server error
-                blanksDialogueViewModel.createNewBlanksDialogue(0)
+                blanksDialogueViewModel.reset()
             }
         }
     }
