@@ -5,9 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -48,14 +45,13 @@ fun BlanksDialogue(
             verticalArrangement = Arrangement.SpaceEvenly,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .fillMaxSize()
                 .padding(dimensionResource(R.dimen.padding_medium))
         ) {
             Text(
                 text = "${uiState.nOfBlanks} blank tile(s) detected. Please enter their value(s).",
                 style = MaterialTheme.typography.titleLarge
             )
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.padding(dimensionResource(R.dimen.padding_medium)))
 
             uiState.blankInputs.forEachIndexed { i, blankInput ->
                 BlankValueInputField(
@@ -145,9 +141,6 @@ fun BlanksDialoguePreview() {
             BlanksDialogue(
                 viewModel = viewModel.blanksDialogueViewModel,
                 onSubmission = viewModel::onBlanksSubmission,
-                modifier = Modifier
-                    .fillMaxWidth(.9f)
-                    .fillMaxHeight(.6f)
             )
         }
     }
