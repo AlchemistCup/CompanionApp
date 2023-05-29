@@ -24,6 +24,7 @@ data class MatchUiState (
     val matchState: MatchState = MatchState.Unbegun,
     val isDisconnected: Boolean = false,
     val turnNumber: Int = 0,
+    val hasChallenged: Boolean = false
 ) {
     fun getPlayerState(playerId: PlayerId): Player {
         return when (playerId) {
@@ -31,4 +32,12 @@ data class MatchUiState (
             PlayerId.Player2 -> player2
         }
     }
+
+    val inactivePlayerId: PlayerId
+        get() {
+            if (matchState == MatchState.Unbegun || matchState == MatchState.Finished)
+                throw IllegalStateException("Match state must be InProgress or Paused to get inactive playerId")
+
+            return if (player1.isTimerPaused) PlayerId.Player1 else PlayerId.Player2
+        }
 }

@@ -1,7 +1,6 @@
 package com.example.alchemistcompanion.data
 
 import android.util.Log
-import com.example.alchemistcompanion.network.BlankTileValues
 import com.example.alchemistcompanion.network.ChallengeBody
 import com.example.alchemistcompanion.network.ChallengeableWordsBody
 import com.example.alchemistcompanion.network.EmptyBody
@@ -62,7 +61,7 @@ class DefaultMatchDataRepository(
         turnNumber: Int,
         blankValues: List<String>
     ): ServerResponse<EmptyBody> {
-        val res = matchDataApiService.sendBlanks(matchId, turnNumber, BlankTileValues(blankValues))
+        val res = matchDataApiService.sendBlanks(matchId, turnNumber, blankValues)
         Log.d(TAG, "$res")
         return res
     }

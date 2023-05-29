@@ -3,7 +3,6 @@ package com.example.alchemistcompanion.ui.setup
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,7 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.alchemistcompanion.R
-import com.example.alchemistcompanion.ui.common.AnimatedLoadingIcon
+import com.example.alchemistcompanion.ui.common.LoadingScreen
 import com.example.alchemistcompanion.ui.theme.AlchemistCompanionTheme
 
 @Composable
@@ -128,19 +127,9 @@ fun ConnectionStatus(
     modifier: Modifier = Modifier
 ) {
     when (matchStartState) {
-        is MatchStartState.Loading -> LoadingScreen(modifier)
+        is MatchStartState.Loading -> LoadingScreen(modifier.size(200.dp))
         is MatchStartState.Success -> SuccessScreen(matchStartState.matchId, modifier)
         is MatchStartState.Error -> ErrorScreen(matchStartState.reason, modifier)
-    }
-}
-
-@Composable
-fun LoadingScreen(modifier: Modifier = Modifier) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-    ) {
-        AnimatedLoadingIcon(modifier = Modifier.size(200.dp))
     }
 }
 

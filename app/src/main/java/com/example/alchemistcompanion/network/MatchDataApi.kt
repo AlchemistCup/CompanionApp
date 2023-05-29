@@ -38,7 +38,7 @@ interface MatchDataApiService {
     suspend fun sendBlanks(
         @Query("match_id") matchId: String,
         @Query("turn_number") turnNumber: Int,
-        @Body blankValues: BlankTileValues
+        @Body blankValues: List<String>
     ): ServerResponse<EmptyBody>
 }
 
@@ -74,16 +74,14 @@ data class ChallengeableWordsBody(
 
 @Serializable
 data class ChallengeBody(
-    val success: Boolean,
-    val penalty: Int
+    val successful: Boolean,
+    @SerialName(value = "challenger_penalty")
+    val challengerPenalty: Int,
+    @SerialName(value = "undone_move_score")
+    val undoneMoveScore: Int
 )
 
 @Serializable
 data class EmptyBody(
     val success: Boolean = true
-)
-
-@Serializable
-data class BlankTileValues(
-    val values: List<String>
 )

@@ -1,4 +1,4 @@
-package com.example.alchemistcompanion.ui.match
+package com.example.alchemistcompanion.ui.match.blanksdialogue
 
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

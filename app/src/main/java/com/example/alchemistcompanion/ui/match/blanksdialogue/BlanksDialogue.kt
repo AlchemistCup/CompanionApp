@@ -1,4 +1,4 @@
-package com.example.alchemistcompanion.ui.match
+package com.example.alchemistcompanion.ui.match.blanksdialogue
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +27,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.alchemistcompanion.R
 import com.example.alchemistcompanion.data.DefaultAppContainer
+import com.example.alchemistcompanion.ui.match.MatchViewModel
+import com.example.alchemistcompanion.ui.match.MatchViewModelFactory
 import com.example.alchemistcompanion.ui.theme.AlchemistCompanionTheme
 
 @Composable

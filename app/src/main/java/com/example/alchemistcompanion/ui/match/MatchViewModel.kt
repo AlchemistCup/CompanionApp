@@ -6,6 +6,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.alchemistcompanion.data.MatchDataRepository
 import com.example.alchemistcompanion.network.ServerResponse
+import com.example.alchemistcompanion.ui.match.blanksdialogue.BlanksDialogueViewModel
+import com.example.alchemistcompanion.ui.match.challengedialogue.ChallengeDialogueState
+import com.example.alchemistcompanion.ui.match.challengedialogue.ChallengeDialogueViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,6 +41,7 @@ class MatchViewModel(
     val uiState: StateFlow<MatchUiState> = _uiState.asStateFlow()
 
     val blanksDialogueViewModel = BlanksDialogueViewModel()
+    val challengeDialogueViewModel = ChallengeDialogueViewModel()
 
     fun decrementRemainingTime(player: PlayerId, timeInMs: Int) {
         val currentTime = uiState.value.getPlayerState(player).remainingTime
@@ -57,7 +61,8 @@ class MatchViewModel(
             currentState.copy(
                 player1 = invertTimer(PlayerId.Player1),
                 player2 = invertTimer(PlayerId.Player2),
-                turnNumber = currentTurn + 1
+                turnNumber = currentTurn + 1,
+                hasChallenged = false
             )
         }
 
@@ -116,12 +121,72 @@ class MatchViewModel(
         }
     }
 
-    fun onHold() {
-        Log.d(TAG, "Hold called")
+    fun onChallenge() {
+        if (uiState.value.matchState == MatchState.InProgress)
+            toggleMatchState()
+
+        _uiState.update { currentState ->
+            currentState.copy(hasChallenged = true)
+        }
+
+        challengeDialogueViewModel.updateState(ChallengeDialogueState.Loading)
+        viewModelScope.launch(Dispatchers.IO) {
+            makeServerRequest(
+                request = { matchDataRepository.getChallengeableWords(
+                    matchId = matchId,
+                    turnNumber = uiState.value.turnNumber - 1
+                )},
+                onSuccess = { result ->
+                    Log.d(TAG, "Received getChallengeableWords response $result")
+                    if (result.words.isNotEmpty()) {
+                        challengeDialogueViewModel.setChallengeWords(result.words)
+                    } else {
+                        val msg = "Server provided no challengeable words"
+                        Log.d(TAG, msg)
+                        onDisconnect(msg)
+                    }
+                }
+            )
+        }
     }
 
-    fun onChallenge() {
-        Log.d(TAG, "Challenge called")
+    fun onChallengeSubmit() {
+        val words = challengeDialogueViewModel.selectedWords
+        if (words.isEmpty())
+            throw IllegalStateException("At least one word must be selected before submitting challenge")
+
+        challengeDialogueViewModel.updateState(ChallengeDialogueState.Loading)
+        viewModelScope.launch(Dispatchers.IO) {
+            makeServerRequest(
+                request = { matchDataRepository.challenge(
+                    matchId = matchId,
+                    turnNumber = uiState.value.turnNumber,
+                    words = words
+                )},
+                onSuccess = { result ->
+                    val opponentId = uiState.value.inactivePlayerId
+                    val currOpponent = uiState.value.getPlayerState(opponentId)
+                    val newOpponent = if (result.successful) {
+                        challengeDialogueViewModel.updateState(ChallengeDialogueState.Successful)
+                        currOpponent.copy(
+                            score = currOpponent.score - result.undoneMoveScore
+                        )
+                    } else {
+                        challengeDialogueViewModel.updateState(ChallengeDialogueState.Unsuccessful(result.challengerPenalty))
+                        currOpponent.copy(
+                            score = currOpponent.score + result.challengerPenalty
+                        )
+                    }
+                    updatePlayerState(opponentId, newOpponent)
+                }
+            )
+        }
+    }
+
+    fun onChallengeComplete() {
+        challengeDialogueViewModel.reset()
+        if (uiState.value.matchState == MatchState.Paused)
+            toggleMatchState()
     }
 
     private fun updatePlayerState(playerId: PlayerId, updatedPlayer: Player) {
@@ -156,6 +221,8 @@ class MatchViewModel(
 
     private fun onDisconnect(reason: String) {
         Log.d(TAG, "Switching to offline mode ($reason)")
+        challengeDialogueViewModel.reset()
+        blanksDialogueViewModel.reset()
     }
 }
 

@@ -1,4 +1,4 @@
-package com.example.alchemistcompanion.ui.match
+package com.example.alchemistcompanion.ui.match.blanksdialogue
 
 data class BlanksDialogueUiState(
     val nOfBlanks: Int,

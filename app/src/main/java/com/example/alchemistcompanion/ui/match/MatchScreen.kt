@@ -5,6 +5,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -33,6 +34,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.alchemistcompanion.R
 import com.example.alchemistcompanion.data.DefaultAppContainer
+import com.example.alchemistcompanion.ui.match.blanksdialogue.BlanksDialogue
+import com.example.alchemistcompanion.ui.match.challengedialogue.ChallengeDialogue
+import com.example.alchemistcompanion.ui.match.challengedialogue.ChallengeDialogueState
 import com.example.alchemistcompanion.ui.theme.AlchemistCompanionTheme
 import kotlinx.coroutines.delay
 import kotlin.math.ceil
@@ -156,12 +160,13 @@ fun PlayerCard(
 fun UtilityButtons(
     uiState: MatchUiState,
     onChallenge: () -> Unit,
-    onHold: () -> Unit,
     onPause: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val canChallenge = true
-    val canHold = true
+    val canChallenge =
+        uiState.matchState != MatchState.Finished
+        && uiState.turnNumber > 0
+        && !uiState.hasChallenged
 
     val buttonModifier = Modifier
         .fillMaxWidth()
@@ -176,13 +181,6 @@ fun UtilityButtons(
             onClick = onChallenge,
             isEnabled = canChallenge,
             label = "Challenge",
-            modifier = buttonModifier
-        )
-
-        EnabledButton(
-            onClick = onHold,
-            isEnabled = canHold,
-            label = "Hold",
             modifier = buttonModifier
         )
 
@@ -249,7 +247,6 @@ fun MatchScreen(
             UtilityButtons(
                 uiState = uiState,
                 onChallenge = viewModel::onChallenge,
-                onHold = viewModel::onHold,
                 onPause = viewModel::toggleMatchState,
                 modifier = Modifier.weight(1f)
             )
@@ -271,11 +268,40 @@ fun MatchScreen(
         enter = slideInVertically(),
         exit = slideOutVertically()
     ) {
-        Dialog(onDismissRequest = { /*Do nothing*/ }) {
-            BlanksDialogue(
-                viewModel = viewModel.blanksDialogueViewModel,
-                onSubmission = viewModel::onBlanksSubmission,
-            )
+        Dialog(
+            onDismissRequest = { /*User cannot dismiss dialogue*/ },
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                BlanksDialogue(
+                    viewModel = viewModel.blanksDialogueViewModel,
+                    onSubmission = viewModel::onBlanksSubmission,
+                )
+            }
+        }
+    }
+
+    val challengeUiState by viewModel.challengeDialogueViewModel.uiState.collectAsState()
+
+    AnimatedVisibility(
+        visible = challengeUiState.dialogueState != ChallengeDialogueState.Inactive,
+        enter = slideInVertically(),
+        exit = slideOutVertically()
+    ) {
+        Dialog(onDismissRequest = { /*User cannot dismiss dialogue*/ }) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                ChallengeDialogue(
+                    viewModel = viewModel.challengeDialogueViewModel,
+                    onSubmission = viewModel::onChallengeSubmit,
+                    onExit = viewModel::onChallengeComplete
+                )
+            }
+
         }
     }
 }
