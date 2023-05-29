@@ -20,10 +20,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.alchemistcompanion.R
@@ -32,11 +34,12 @@ import com.example.alchemistcompanion.ui.theme.AlchemistCompanionTheme
 
 @Composable
 fun BlanksDialogue(
-    uiState: BlanksDialogueUiState,
-    onUserInputChange: (String) -> Unit,
+    viewModel: BlanksDialogueViewModel,
     onSubmission: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val uiState by viewModel.blanksUiState.collectAsState()
+
     Box(
         modifier = modifier
             .background(color = MaterialTheme.colorScheme.surface)
@@ -46,46 +49,81 @@ fun BlanksDialogue(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(dimensionResource(R.dimen.padding_small))
+                .padding(dimensionResource(R.dimen.padding_medium))
         ) {
             Text(
-                text = "${uiState.nOfBlanks} blank tile(s) detected. Please enter their value(s) in reading order.",
+                text = "${uiState.nOfBlanks} blank tile(s) detected. Please enter their value(s).",
                 style = MaterialTheme.typography.titleLarge
             )
             Spacer(modifier = Modifier.weight(1f))
-            OutlinedTextField(
-                value = uiState.userInput,
-                singleLine = true,
-                shape = MaterialTheme.shapes.large,
-                onValueChange = onUserInputChange,
-                textStyle = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.fillMaxWidth(),
-                label = {
-                    if (uiState.isInputInvalid) {
-                        Text("Expected ${uiState.nOfBlanks} letter(s)")
-                    } else {
-                        Text("Enter blank value(s)")
-                    }
-                },
-                isError = uiState.isInputInvalid,
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = { onSubmission() }
+
+            uiState.blankInputs.forEachIndexed { i, blankInput ->
+                BlankValueInputField(
+                    uiState = blankInput,
+                    inputNumber = i,
+                    onUserInputChange = { viewModel.onBlankUserUpdate(i, it) },
+                    onKeyboardDone = { viewModel.validateBlankInput(i) },
                 )
-            )
+                Spacer(modifier = Modifier.padding(dimensionResource(R.dimen.padding_small)))
+            }
+
             Button(
                 modifier = Modifier.padding(dimensionResource(R.dimen.padding_small)),
                 onClick = onSubmission
             ) {
                 Text(
                     text = stringResource(R.string.submit),
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleLarge
                 )
             }
         }
     }
+}
+
+@Composable
+fun BlankValueInputField(
+    uiState: BlankInput,
+    inputNumber: Int,
+    onUserInputChange: (String) -> Unit,
+    onKeyboardDone: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val focusManager = LocalFocusManager.current
+    Column(
+        modifier = modifier
+    ) {
+        Text(
+            "Blank ${inputNumber + 1}",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(bottom = 2.dp)
+        )
+        OutlinedTextField(
+            value = uiState.userInput,
+            singleLine = true,
+            shape = MaterialTheme.shapes.large,
+            onValueChange = onUserInputChange,
+            textStyle = MaterialTheme.typography.titleMedium,
+            modifier = modifier,
+            label = {
+                if (uiState.isInputInvalid) {
+                    Text(stringResource(R.string.enter_blank_error))
+                } else {
+                    Text(stringResource(R.string.enter_blank_prompt))
+                }
+            },
+            isError = uiState.isInputInvalid,
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    onKeyboardDone()
+                    focusManager.clearFocus()
+                }
+            )
+        )
+    }
+
 }
 
 @Preview(showBackground = true, showSystemUi = true, device = "spec:width=1280dp,height=800dp")
@@ -101,14 +139,11 @@ fun BlanksDialoguePreview() {
                 "Player2"
             )
         )
-        viewModel.createNewBlanksDialogue(1)
-
-        val blanksUiState by viewModel.blanksUiState.collectAsState()
+        viewModel.blanksDialogueViewModel.createNewBlanksDialogue(2)
 
         Dialog(onDismissRequest = { /*Do nothing*/ }) {
             BlanksDialogue(
-                uiState = blanksUiState,
-                onUserInputChange = viewModel::onBlanksUserUpdate,
+                viewModel = viewModel.blanksDialogueViewModel,
                 onSubmission = viewModel::onBlanksSubmission,
                 modifier = Modifier
                     .fillMaxWidth(.9f)

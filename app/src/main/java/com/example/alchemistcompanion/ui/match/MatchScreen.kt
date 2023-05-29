@@ -1,8 +1,8 @@
 package com.example.alchemistcompanion.ui.match
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -265,20 +265,20 @@ fun MatchScreen(
         }
     }
 
-    val blanksUiState by viewModel.blanksUiState.collectAsState()
+    val blanksUiState by viewModel.blanksDialogueViewModel.blanksUiState.collectAsState()
+
     AnimatedVisibility(
         visible = blanksUiState.nOfBlanks > 0,
-        enter = scaleIn(),
-        exit = scaleOut()
+        enter = slideInVertically(),
+        exit = slideOutVertically()
     ) {
         Dialog(onDismissRequest = { /*Do nothing*/ }) {
             BlanksDialogue(
-                uiState = blanksUiState,
-                onUserInputChange = viewModel::onBlanksUserUpdate,
+                viewModel = viewModel.blanksDialogueViewModel,
                 onSubmission = viewModel::onBlanksSubmission,
                 modifier = Modifier
                     .fillMaxWidth(.9f)
-                    .fillMaxHeight(.7f)
+                    .fillMaxHeight(.8f)
             )
         }
     }

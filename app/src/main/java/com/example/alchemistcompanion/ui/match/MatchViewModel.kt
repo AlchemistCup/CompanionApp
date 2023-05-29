@@ -37,10 +37,7 @@ class MatchViewModel(
     )
     val uiState: StateFlow<MatchUiState> = _uiState.asStateFlow()
 
-    private val _blanksUiState = MutableStateFlow(
-        BlanksDialogueUiState(0)
-    )
-    val blanksUiState: StateFlow<BlanksDialogueUiState> = _blanksUiState.asStateFlow()
+    val blanksDialogueViewModel = BlanksDialogueViewModel()
 
     fun decrementRemainingTime(player: PlayerId, timeInMs: Int) {
         val currentTime = uiState.value.getPlayerState(player).remainingTime
@@ -79,7 +76,7 @@ class MatchViewModel(
                             currentPlayer.copy(score = currentPlayer.score + result.score)
                         updatePlayerState(playerId, updatedPlayer)
                         if (result.blanks > 0) {
-                            createNewBlanksDialogue(result.blanks)
+                            blanksDialogueViewModel.createNewBlanksDialogue(result.blanks)
                         }
                     }
                 )
@@ -98,40 +95,23 @@ class MatchViewModel(
         }
     }
 
-    fun createNewBlanksDialogue(nOfBlanks: Int) {
-        _blanksUiState.update {
-            BlanksDialogueUiState(nOfBlanks)
-        }
-    }
-
-    fun onBlanksUserUpdate(userInput: String) {
-        _blanksUiState.update { currentState ->
-            currentState.copy(userInput = userInput)
-        }
-    }
-
     fun onBlanksSubmission() {
-        fun String.isAlpha() = all { it.isLetter() }
-        val isInputValid =
-            blanksUiState.value.userInput.length == blanksUiState.value.nOfBlanks
-            && blanksUiState.value.userInput.isAlpha()
-
-        _blanksUiState.update { currentState ->
-            currentState.copy(isInputInvalid = !isInputValid)
+        for (i in 0 until blanksDialogueViewModel.blanksUiState.value.nOfBlanks) {
+            blanksDialogueViewModel.validateBlankInput(i)
         }
 
-        if (isInputValid) {
+        if (blanksDialogueViewModel.isValid) {
             viewModelScope.launch(Dispatchers.IO) {
                 makeServerRequest(
                     request = { matchDataRepository.sendBlanks(
                         matchId = matchId,
                         turnNumber = uiState.value.turnNumber - 1, // Always submitting blanks for previous turn
-                        blankValues = blanksUiState.value.userInput
+                        blankValues = blanksDialogueViewModel.blankValues
                     )},
                     onSuccess = {}
                 )
                 // Reset blanks dialogue regardless of success / failure on server side to allow match to progress on server error
-                createNewBlanksDialogue(0)
+                blanksDialogueViewModel.createNewBlanksDialogue(0)
             }
         }
     }
