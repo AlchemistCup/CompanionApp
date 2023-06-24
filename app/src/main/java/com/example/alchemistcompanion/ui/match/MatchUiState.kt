@@ -22,7 +22,6 @@ data class MatchUiState (
     val player1: Player,
     val player2: Player,
     val matchState: MatchState = MatchState.Unbegun,
-    val isDisconnected: Boolean = false,
     val turnNumber: Int = 0,
     val hasChallenged: Boolean = false
 ) {

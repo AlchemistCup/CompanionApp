@@ -64,7 +64,9 @@ data class SetupMatchBody(
 @Serializable
 data class EndTurnBody(
     val score: Int,
-    val blanks: Int
+    val blanks: Int,
+    @SerialName(value = "end_game_bonus")
+    val endGameBonus: Int? = null
 )
 
 @Serializable

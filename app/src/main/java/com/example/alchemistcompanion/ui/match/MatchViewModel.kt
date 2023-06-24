@@ -1,6 +1,9 @@
 package com.example.alchemistcompanion.ui.match
 
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -17,6 +20,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
+
+sealed interface ServerConnectionState {
+    object Success : ServerConnectionState
+    data class Error(val reason: String) : ServerConnectionState
+    object Loading : ServerConnectionState
+}
 
 class MatchViewModel(
     private val matchDataRepository: MatchDataRepository,
@@ -39,6 +48,9 @@ class MatchViewModel(
         )
     )
     val uiState: StateFlow<MatchUiState> = _uiState.asStateFlow()
+
+    var serverConnectionState: ServerConnectionState by mutableStateOf(ServerConnectionState.Success)
+        //sprivate set
 
     val blanksDialogueViewModel = BlanksDialogueViewModel()
     val challengeDialogueViewModel = ChallengeDialogueViewModel()
@@ -66,7 +78,7 @@ class MatchViewModel(
             )
         }
 
-        if (!uiState.value.isDisconnected) {
+        if (serverConnectionState is ServerConnectionState.Success) {
             viewModelScope.launch(Dispatchers.IO) {
                 makeServerRequest(
                     request = { matchDataRepository.endTurn(
@@ -78,10 +90,18 @@ class MatchViewModel(
                         Log.d(TAG, "Received end turn response $result")
                         val currentPlayer = uiState.value.getPlayerState(playerId)
                         val updatedPlayer =
-                            currentPlayer.copy(score = currentPlayer.score + result.score)
+                            currentPlayer.copy(score = currentPlayer.score + result.score + (result.endGameBonus ?: 0))
                         updatePlayerState(playerId, updatedPlayer)
                         if (result.blanks > 0) {
                             blanksDialogueViewModel.createNewBlanksDialogue(result.blanks)
+                        }
+
+                        if (result.endGameBonus != null) {
+                            _uiState.update { currentState ->
+                                currentState.copy(
+                                    matchState = MatchState.Finished
+                                )
+                            }
                         }
                     }
                 )
@@ -202,9 +222,11 @@ class MatchViewModel(
         request: suspend () -> ServerResponse<T>,
         onSuccess: (T) -> Unit
     ) {
+        serverConnectionState = ServerConnectionState.Loading
         try {
             val result = request()
             if (result.success) {
+                serverConnectionState = ServerConnectionState.Success
                 onSuccess(result.body!!)
             } else {
                 Log.d(TAG, "Received end turn error ${result.error}")
@@ -221,6 +243,7 @@ class MatchViewModel(
 
     private fun onDisconnect(reason: String) {
         Log.d(TAG, "Switching to offline mode ($reason)")
+        serverConnectionState = ServerConnectionState.Error(reason)
         challengeDialogueViewModel.reset()
         blanksDialogueViewModel.reset()
     }

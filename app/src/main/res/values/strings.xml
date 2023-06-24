@@ -13,7 +13,7 @@
     <string name="enter_blank_error">Expected 1 letter</string>
     <string name="confirm">Confirm</string>
     <string name="successful_challenge">Challenge successful, please undo the latest move.</string>
-    <string name="unsuccessful_challenge">Challenge unsuccessful, %1$d point penalty applied.</string>
+    <string name="unsuccessful_challenge">Challenge unsuccessful, %1$d-point penalty applied.</string>
     <string name="challenge_select">Select words to challenge:</string>
     <string name="ok">OK</string>
 </resources>

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -34,6 +35,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.alchemistcompanion.R
 import com.example.alchemistcompanion.data.DefaultAppContainer
+import com.example.alchemistcompanion.ui.common.LoadingIcon
 import com.example.alchemistcompanion.ui.match.blanksdialogue.BlanksDialogue
 import com.example.alchemistcompanion.ui.match.challengedialogue.ChallengeDialogue
 import com.example.alchemistcompanion.ui.match.challengedialogue.ChallengeDialogueState
@@ -157,16 +159,42 @@ fun PlayerCard(
 }
 
 @Composable
+fun ConnectionStatus(
+    serverConnectionState: ServerConnectionState,
+    modifier: Modifier = Modifier
+) {
+    when (serverConnectionState) {
+        is ServerConnectionState.Loading -> LoadingIcon(modifier.size(200.dp))
+        is ServerConnectionState.Success -> Unit
+        is ServerConnectionState.Error -> ErrorMessage(serverConnectionState.reason, modifier)
+    }
+}
+
+@Composable
+fun ErrorMessage(
+    reason: String,
+    modifier: Modifier = Modifier) {
+    Text(
+        text = "Server error:\n$reason\nSmart functionality is now disabled",
+        style = typography.titleLarge,
+        color = colorScheme.error,
+        modifier = modifier
+    )
+}
+
+@Composable
 fun UtilityButtons(
     uiState: MatchUiState,
+    connectionState: ServerConnectionState,
     onChallenge: () -> Unit,
     onPause: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val canChallenge =
         uiState.matchState != MatchState.Finished
-        && uiState.turnNumber > 0
-        && !uiState.hasChallenged
+                && uiState.turnNumber > 0
+                && !uiState.hasChallenged
+                && connectionState is ServerConnectionState.Success
 
     val buttonModifier = Modifier
         .fillMaxWidth()
@@ -177,6 +205,8 @@ fun UtilityButtons(
         verticalArrangement = Arrangement.SpaceEvenly,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Spacer(modifier = Modifier.height(180.dp))
+
         EnabledButton(
             onClick = onChallenge,
             isEnabled = canChallenge,
@@ -204,8 +234,9 @@ fun UtilityButtons(
                 style = typography.displayMedium
             )
         }
+        Spacer(modifier = Modifier.weight(1f))
+        ConnectionStatus(serverConnectionState = connectionState)
     }
-
 }
 
 @Composable
@@ -214,6 +245,7 @@ fun MatchScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val connectionState = viewModel.serverConnectionState
 
     Column(
         modifier = modifier,
@@ -246,9 +278,12 @@ fun MatchScreen(
 
             UtilityButtons(
                 uiState = uiState,
+                connectionState = connectionState,
                 onChallenge = viewModel::onChallenge,
                 onPause = viewModel::toggleMatchState,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(bottom = dimensionResource(id = R.dimen.padding_large))
             )
 
             PlayerCard(
@@ -319,6 +354,7 @@ fun MatchScreenPreview() {
                 "Player2"
             )
         )
+        viewModel.serverConnectionState = ServerConnectionState.Error("Sample message")
         MatchScreen(viewModel)
     }
 }

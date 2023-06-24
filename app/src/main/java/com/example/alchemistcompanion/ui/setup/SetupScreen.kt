@@ -29,7 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.alchemistcompanion.R
-import com.example.alchemistcompanion.ui.common.LoadingScreen
+import com.example.alchemistcompanion.ui.common.LoadingIcon
 import com.example.alchemistcompanion.ui.theme.AlchemistCompanionTheme
 
 @Composable
@@ -127,7 +127,7 @@ fun ConnectionStatus(
     modifier: Modifier = Modifier
 ) {
     when (matchStartState) {
-        is MatchStartState.Loading -> LoadingScreen(modifier.size(200.dp))
+        is MatchStartState.Loading -> LoadingIcon(modifier.size(200.dp))
         is MatchStartState.Success -> SuccessScreen(matchStartState.matchId, modifier)
         is MatchStartState.Error -> ErrorScreen(matchStartState.reason, modifier)
     }

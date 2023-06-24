@@ -31,7 +31,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.alchemistcompanion.R
 import com.example.alchemistcompanion.data.DefaultAppContainer
-import com.example.alchemistcompanion.ui.common.LoadingScreen
+import com.example.alchemistcompanion.ui.common.LoadingIcon
 import com.example.alchemistcompanion.ui.match.MatchViewModel
 import com.example.alchemistcompanion.ui.match.MatchViewModelFactory
 import com.example.alchemistcompanion.ui.theme.AlchemistCompanionTheme
@@ -52,7 +52,7 @@ fun ChallengeDialogue(
     ) {
         when (val dialogueState = uiState.dialogueState) {
             is ChallengeDialogueState.Inactive -> {}
-            is ChallengeDialogueState.Loading -> LoadingScreen(modifier.size(200.dp))
+            is ChallengeDialogueState.Loading -> LoadingIcon(modifier.size(200.dp))
             is ChallengeDialogueState.Selecting -> SelectScreen(
                 viewModel = viewModel,
                 onSubmission = onSubmission,
