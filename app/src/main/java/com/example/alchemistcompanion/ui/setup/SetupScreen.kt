@@ -45,11 +45,11 @@ fun SetupScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
-            modifier = Modifier.height(150.dp),
+            modifier = Modifier.height(100.dp),
             painter = painterResource(id = R.drawable.alchemist_logo),
             contentDescription = stringResource(R.string.alchemist_logo)
         )
-        Spacer(modifier = Modifier.height(50.dp))
+        Spacer(modifier = Modifier.height(25.dp))
         Row(
             modifier = Modifier
                 .fillMaxWidth()

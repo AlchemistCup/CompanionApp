@@ -205,7 +205,7 @@ fun UtilityButtons(
         verticalArrangement = Arrangement.SpaceEvenly,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(180.dp))
+        Spacer(modifier = Modifier.height(100.dp))
 
         EnabledButton(
             onClick = onChallenge,
@@ -255,7 +255,7 @@ fun MatchScreen(
             painter = painterResource(R.drawable.alchemist_logo),
             contentDescription = stringResource(R.string.alchemist_logo),
             modifier = Modifier
-                .height(150.dp)
+                .height(100.dp)
                 .padding(dimensionResource(R.dimen.padding_small))
         )
 
